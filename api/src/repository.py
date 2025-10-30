@@ -19,7 +19,8 @@ async def insert_raw(
     if not rows_list:
         return 0
     async with db_pool.transaction() as conn:
-        await conn.executemany(q, rows_list)  # type: ignore[arg-type]
+        async with conn.cursor() as cur:
+            await cur.executemany(q, rows_list)  # type: ignore[arg-type]
     return len(rows_list)
 
 
@@ -36,7 +37,8 @@ async def insert_min1(
     if not rows_list:
         return 0
     async with db_pool.transaction() as conn:
-        await conn.executemany(q, rows_list)  # type: ignore[arg-type]
+        async with conn.cursor() as cur:
+            await cur.executemany(q, rows_list)  # type: ignore[arg-type]
     return len(rows_list)
 
 
