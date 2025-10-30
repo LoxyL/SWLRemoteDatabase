@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  db:
+    image: timescale/timescaledb:latest-pg16
+    container_name: swl_timescaledb
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-swldb}
+      POSTGRES_USER: ${POSTGRES_USER:-swluser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-swlpass}
+      TZ: UTC
+    ports:
+      - "5432:5432"
+    volumes:
+      - swl_pgdata:/var/lib/postgresql/data
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/00_init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  api:
+    build: ./api
+    container_name: swl_api
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB:-swldb}
+      DB_USER: ${POSTGRES_USER:-swluser}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-swlpass}
+      DB_SSLMODE: ${DB_SSLMODE:-disable}
+      API_PORT: 8080
+      TZ: UTC
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  swl_pgdata:
+
+
