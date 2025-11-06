@@ -40,6 +40,17 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  adminer:
+    image: adminer
+    container_name: swl_adminer
+    depends_on:
+      - db
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+    ports:
+      - "8081:8080"
+    restart: unless-stopped
+
 volumes:
   swl_pgdata:
 
