@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+import math
 from typing import List
 
 from fastapi import APIRouter, HTTPException
@@ -35,11 +36,12 @@ async def ingest(measurements: List[MeasurementIn]) -> IngestResponse:
     tuples = [(m.time, m.source, m.parameter, m.value, m.quality) for m in measurements]
     stored_raw = await insert_raw(tuples)
 
-    # 生成/复制 1 分钟序列
+    # 生成/复制 1 分钟序列（如存在 NaN/Inf，则用线性插值填充，确保无 NaN）
     times = [m.time for m in measurements]
     start, end = min(times), max(times)
     pts = [(m.time, m.value) for m in measurements]
-    if is_regular_1min_series(pts):
+    all_finite = all(math.isfinite(v) for _, v in pts)
+    if is_regular_1min_series(pts) and all_finite:
         tuples_min1 = [(t, source, parameter, v, None) for t, v in pts]
     else:
         interp = linear_interpolate_to_minute(pts, start, end)
