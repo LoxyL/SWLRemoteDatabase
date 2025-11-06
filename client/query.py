@@ -3,6 +3,9 @@ from __future__ import annotations
 import json
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Tuple
+import os
+import csv
+import json
 
 from urllib import request
 
@@ -45,5 +48,33 @@ def query_series(
         v = float(item["value"])
         points.append((t, v))
     return points
+
+
+def save_points(out_path: str, points: List[Tuple[datetime, float]], source: str, parameter: str) -> str:
+    ext = os.path.splitext(out_path)[1].lower()
+    if ext in (".json", ""):
+        arr: List[Dict[str, Any]] = [
+            {"time": to_iso8601_z(t), "value": v, "source": source, "parameter": parameter}
+            for t, v in points
+        ]
+        with open(out_path if ext else out_path + ".json", "w", encoding="utf-8") as f:
+            json.dump(arr, f, ensure_ascii=False)
+        return out_path if ext else out_path + ".json"
+    elif ext == ".csv":
+        with open(out_path, "w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(["time", "value", "source", "parameter"])
+            for t, v in points:
+                writer.writerow([to_iso8601_z(t), v, source, parameter])
+        return out_path
+    else:
+        # 未知扩展名，按 JSON 处理
+        arr = [
+            {"time": to_iso8601_z(t), "value": v, "source": source, "parameter": parameter}
+            for t, v in points
+        ]
+        with open(out_path, "w", encoding="utf-8") as f:
+            json.dump(arr, f, ensure_ascii=False)
+        return out_path
 
 

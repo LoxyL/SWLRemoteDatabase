@@ -47,7 +47,7 @@ python -m client.cli --api http://114.66.61.12:8080 ingest \
   --sleep-ms 50
 ```
 
-3) 区间查询（只打印条数）
+3) 区间查询（仅打印条数，或可选导出到文件）
 
 ```bash
 python -m client.cli --api http://114.66.61.12:8080 query \
@@ -59,6 +59,18 @@ python -m client.cli --api http://114.66.61.12:8080 query \
   --source ACE --parameter BZ_GSE \
   --start 2004-11-07T00:00:00Z --end 2004-11-07T02:00:00Z \
   --series min1
+
+# 导出为 JSON（根据扩展名自动识别，未提供扩展名默认 JSON）
+python -m client.cli --api http://114.66.61.12:8080 query \
+  --source ACE --parameter BZ_GSE \
+  --start 2004-11-07T00:00:00Z --end 2004-11-07T02:00:00Z \
+  --series raw --out query_raw.json
+
+# 导出为 CSV（列：time,value,source,parameter）
+python -m client.cli --api http://114.66.61.12:8080 query \
+  --source ACE --parameter BZ_GSE \
+  --start 2004-11-07T00:00:00Z --end 2004-11-07T02:00:00Z \
+  --series min1 --out query_min1.csv
 ```
 
 4) 画图（raw vs min1）
@@ -104,6 +116,7 @@ Time,Value
   - `--source`，`--parameter`
   - `--start`，`--end`：ISO8601（带 `Z` 或 `+00:00`）
   - `--series`：`raw` 或 `min1`
+  - `--out`：可选，导出路径；支持 `.json` 或 `.csv`（未提供或无扩展名时默认保存 JSON；若不提供此参数，则不保存到本地）
 
 - `plot-compare`
   - 与 `query` 相同的参数，另有：
